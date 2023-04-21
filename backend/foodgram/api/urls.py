@@ -21,17 +21,17 @@ urlpatterns = [
         name='download_shopping_cart'
     ),
     path(
-        'recipes/<int:id>/shopping_cart/',
+        'recipes/<int:id_>/shopping_cart/',
         ShoppingCartView.as_view(),
         name='shopping_cart'
     ),
     path(
-        'recipes/<int:id>/favorite/',
+        'recipes/<int:id_>/favorite/',
         FavoriteView.as_view(),
         name='favorite'
     ),
     path(
-        'users/<int:id>/subscribe/',
+        'users/<int:id_>/subscribe/',
         SubscribeView.as_view(),
         name='subscribe'
     ),

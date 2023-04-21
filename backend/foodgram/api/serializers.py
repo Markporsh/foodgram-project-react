@@ -1,13 +1,13 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from djoser.serializers import UserSerializer
+
 from receipts.models import (
     Favorite, Ingredient, Recipe,
     RecipeIngredient, RecipeTag, ShoppingCart, Tag
 )
 from users.models import Subscription, User
-from drf_extra_fields.fields import Base64ImageField
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -86,9 +86,12 @@ class ReceiptSerializer(serializers.ModelSerializer):
     author = CustomUserSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField(
-        method_name='get_is_favorited')
+        method_name='get_is_favorited'
+    )
     is_in_shopping_cart = serializers.SerializerMethodField(
-        method_name='get_is_in_shopping_cart')
+        method_name='get_is_in_shopping_cart'
+    )
+    cooking_time = serializers.IntegerField(min_value=3, max_value=300)
 
     class Meta:
         model = Recipe
@@ -104,6 +107,7 @@ class ReceiptSerializer(serializers.ModelSerializer):
             'text',
             'cooking_time'
         ]
+        validators = []
 
     def get_ingredients(self, obj):
         ingredients = RecipeIngredient.objects.filter(recipe=obj)
@@ -130,7 +134,7 @@ class AddIngredientReceiptSerializer(serializers.ModelSerializer):
     """ Сериализатор добавления ингредиента в рецепт. """
 
     id = serializers.IntegerField()
-    amount = serializers.IntegerField()
+    amount = serializers.IntegerField(min_value=1, max_value=100)
 
     class Meta:
         model = RecipeIngredient
@@ -162,30 +166,36 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         ingredients = self.initial_data.get('ingredients')
-        list = []
-        for i in ingredients:
-            amount = i['amount']
+        ingredients_id = set()
+        for ingredient in ingredients:
+            amount = ingredient['amount']
             if int(amount) < 1:
                 raise serializers.ValidationError({
                    'amount': 'Количество ингредиента должно быть больше 0!'
                 })
-            if i['id'] in list:
+            if ingredient['id'] in ingredients_id:
                 raise serializers.ValidationError({
                    'ingredient': 'Ингредиенты должны быть уникальными!'
                 })
-            list.append(i['id'])
+            ingredients_id.add(ingredient['id'])
         return data
 
     def create_ingredients(self, ingredients, recipe):
-        for i in ingredients:
-            ingredient = Ingredient.objects.get(id=i['id'])
-            RecipeIngredient.objects.create(
-                ingredient=ingredient, recipe=recipe, amount=i['amount']
-            )
+        RecipeIngredient.objects.bulk_create(
+            [RecipeIngredient(
+                ingredient=Ingredient.objects.get(id=ingredient['id']),
+                recipe=recipe,
+                amount=ingredient['amount']
+            ) for ingredient in ingredients]
+        )
 
     def create_tags(self, tags, recipe):
-        for tag in tags:
-            RecipeTag.objects.create(recipe=recipe, tag=tag)
+        RecipeTag.objects.bulk_create(
+            [RecipeTag(
+                recipe=recipe,
+                tag=tag,
+            ) for tag in tags]
+        )
 
     def create(self, validated_data):
         """
@@ -300,7 +310,7 @@ class ShowSubscriptionsSerializer(serializers.ModelSerializer):
             recipes, many=True, context={'request': request}).data
 
     def get_recipes_count(self, obj):
-        return Recipe.objects.filter(author=obj).count()
+        return obj.favorites.count()
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -321,6 +331,11 @@ class SubscriptionSerializer(serializers.ModelSerializer):
             'request': self.context.get('request')
         }).data
 
+    def validate(self, data):
+        if data['user'] == data['author']:
+            raise serializers.ValidationError("Вы не можете подписаться на себя")
+        return data
+
 
 class UserListSerializer(UserSerializer):
     is_subscribed = serializers.BooleanField(read_only=True)
@@ -329,7 +344,8 @@ class UserListSerializer(UserSerializer):
         model = User
         fields = (
             'email', 'id', 'username',
-            'first_name', 'last_name', 'is_subscribed')
+            'first_name', 'last_name', 'is_subscribed'
+        )
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
@@ -338,4 +354,5 @@ class UserCreateSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'id', 'email', 'username',
-            'first_name', 'last_name', 'password',)
+            'first_name', 'last_name', 'password',
+        )

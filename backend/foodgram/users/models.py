@@ -43,7 +43,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class Meta:
-        ordering = ['-pk']
+        ordering = ('-pk',)
 
     def __str__(self):
         return self.username
@@ -64,6 +64,9 @@ class Subscription(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Автор'
     )
+
+    class Meta:
+        ordering = ('author',)
 
     def __str__(self):
         return f'Пользователь {self.user} подписался на {self.author}'

@@ -15,7 +15,7 @@ class Ingredient(models.Model):
     )
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name',)
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
@@ -43,7 +43,7 @@ class Tag(models.Model):
     )
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name',)
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
@@ -118,9 +118,15 @@ class RecipeIngredient(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Ингредиент'
     )
-    amount = models.IntegerField(
+    amount = models.PositiveSmallIntegerField(
         'Количество',
     )
+
+    class Meta:
+        ordering = ('recipe',)
+
+    def __str__(self):
+        return self.recipe
 
 
 class RecipeTag(models.Model):
@@ -136,6 +142,12 @@ class RecipeTag(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Тег'
     )
+
+    class Meta:
+        ordering = ('tag',)
+
+    def __str__(self):
+        return self.tag
 
 
 class Favorite(models.Model):
@@ -154,6 +166,12 @@ class Favorite(models.Model):
         related_name='favorites',
     )
 
+    class Meta:
+        ordering = ('recipe',)
+
+    def __str__(self):
+        return self.recipe
+
 
 class ShoppingCart(models.Model):
     """ Модель корзины. """
@@ -170,3 +188,9 @@ class ShoppingCart(models.Model):
         verbose_name='Рецепт',
         related_name='shopping_cart',
     )
+
+    class Meta:
+        ordering = ('recipe',)
+
+    def __str__(self):
+        return self.recipe
