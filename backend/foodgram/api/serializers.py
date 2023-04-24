@@ -166,18 +166,13 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         ingredients = self.initial_data.get('ingredients')
-        ingredients_id = set()
+        ingredients_ids = set()
         for ingredient in ingredients:
-            amount = ingredient['amount']
-            if int(amount) < 1:
-                raise serializers.ValidationError({
-                   'amount': 'Количество ингредиента должно быть больше 0!'
-                })
-            if ingredient['id'] in ingredients_id:
+            if ingredient['id'] in ingredients_ids:
                 raise serializers.ValidationError({
                    'ingredient': 'Ингредиенты должны быть уникальными!'
                 })
-            ingredients_id.add(ingredient['id'])
+            ingredients_ids.add(ingredient['id'])
         return data
 
     def create_ingredients(self, ingredients, recipe):
