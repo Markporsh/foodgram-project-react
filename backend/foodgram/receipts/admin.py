@@ -26,7 +26,6 @@ class ReceiptAdmin(admin.ModelAdmin):
         'author__email', 'ingredients'
     )
     list_filter = ('author', 'title', 'tags')
-    # inlines = (ReceiptIngredientAdmin, ReceiptTagAdmin)
     empty_value_display = EMPTY_MSG
 
     @admin.display(description='Электронная почта автора')
@@ -44,9 +43,6 @@ class ReceiptAdmin(admin.ModelAdmin):
     @admin.display(description='В избранном')
     def get_favorite_count(self, obj):
         return Favorite.objects.filter(recipe=obj).count()
-
-
-
 
 
 @admin.register(Tag)
