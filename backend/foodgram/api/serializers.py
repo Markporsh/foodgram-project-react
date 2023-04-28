@@ -154,7 +154,6 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = [
-            'id',
             'author',
             'ingredients',
             'tags',
@@ -211,6 +210,7 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
         Изменение рецепта.
         Доступно только автору.
         """
+        print(validated_data)
 
         RecipeTag.objects.filter(recipe=instance).delete()
         RecipeIngredient.objects.filter(recipe=instance).delete()
