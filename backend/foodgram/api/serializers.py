@@ -184,6 +184,7 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
         )
 
     def create_tags(self, tags, recipe):
+        print(tags, recipe)
         RecipeTag.objects.bulk_create(
             [RecipeTag(
                 recipe=recipe,
@@ -196,6 +197,7 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
         Создание рецепта.
         Доступно только авторизированному пользователю.
         """
+        print(validated_data)
 
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
@@ -211,6 +213,7 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
         Доступно только автору.
         """
         print(validated_data)
+        print(instance)
 
         RecipeTag.objects.filter(recipe=instance).delete()
         RecipeIngredient.objects.filter(recipe=instance).delete()
@@ -227,6 +230,7 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
+        print(instance)
         return ReceiptSerializer(instance, context={
             'request': self.context.get('request')
         }).data
