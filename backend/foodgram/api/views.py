@@ -189,7 +189,7 @@ def download_shopping_cart(request):
     ).values(
         'ingredient__name', 'ingredient__measurement_unit'
     ).annotate(amount=Sum('amount'))
-    for num, i in ingredients:
+    for num, i in enumerate(ingredients):
         ingredient_list += (
             f"\n{i['ingredient__name']} - "
             f"{i['amount']} {i['ingredient__measurement_unit']}"

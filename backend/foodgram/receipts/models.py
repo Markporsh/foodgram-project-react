@@ -63,9 +63,9 @@ class Recipe(models.Model):
         null=True
     )
 
-    title = models.CharField(
-        max_length=255,
-        verbose_name='Название рецепта'
+    name = models.CharField(
+        verbose_name='Название рецепта',
+        max_length=255
     )
 
     image = models.ImageField(
@@ -102,7 +102,7 @@ class Recipe(models.Model):
         ordering = ('-pub_date',)
 
     def __str__(self):
-        return self.title
+        return self.name
 
 
 class RecipeIngredient(models.Model):

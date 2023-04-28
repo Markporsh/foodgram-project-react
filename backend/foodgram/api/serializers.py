@@ -102,7 +102,7 @@ class ReceiptSerializer(serializers.ModelSerializer):
             'ingredients',
             'is_favorited',
             'is_in_shopping_cart',
-            'title',
+            'name',
             'image',
             'text',
             'cooking_time'
@@ -158,7 +158,7 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
             'ingredients',
             'tags',
             'image',
-            'title',
+            'name',
             'text',
             'cooking_time'
         ]
@@ -212,8 +212,8 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
         Изменение рецепта.
         Доступно только автору.
         """
-        print(validated_data)
-        print(instance)
+        print(validated_data, 'val')
+        print(instance, 'instance')
 
         RecipeTag.objects.filter(recipe=instance).delete()
         RecipeIngredient.objects.filter(recipe=instance).delete()
@@ -221,7 +221,8 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         self.create_ingredients(ingredients, instance)
         self.create_tags(tags, instance)
-        instance.name = validated_data.pop('title')
+        if validated_data.get('name'):
+            instance.name = validated_data.pop('name')
         instance.text = validated_data.pop('text')
         if validated_data.get('image'):
             instance.image = validated_data.pop('image')
@@ -241,7 +242,7 @@ class ShowFavoriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ['id', 'title', 'image', 'cooking_time']
+        fields = ['id', 'name', 'image', 'cooking_time']
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):

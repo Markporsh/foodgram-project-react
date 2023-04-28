@@ -17,15 +17,15 @@ class UserAdmin(admin.ModelAdmin):
 @admin.register(Recipe)
 class ReceiptAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'get_author', 'title', 'text',
+        'id', 'get_author', 'name', 'text',
         'cooking_time', 'get_tags', 'get_ingredients',
         'pub_date', 'get_favorite_count'
     )
     search_fields = (
-        'name', 'cooking_time',
+        'cooking_time',
         'author__email', 'ingredients'
     )
-    list_filter = ('author', 'title', 'tags')
+    list_filter = ('author', 'name', 'tags')
     empty_value_display = EMPTY_MSG
 
     @admin.display(description='Электронная почта автора')
