@@ -1,6 +1,7 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.generics import ListAPIView
@@ -9,11 +10,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from djoser.views import UserViewSet
 from rest_framework import filters
+
+from .filters import RecipeFilter
 from .pagination import CustomPagination
 from .serializers import (
     CreateReceiptSerializer, ReceiptSerializer, ShoppingCartSerializer,
     SubscriptionSerializer, ShowSubscriptionsSerializer, FavoriteSerializer,
-    TagSerializer, IngredientSerializer
+    TagSerializer, IngredientSerializer, CustomUserSerializer
 )
 from receipts.models import (
     Favorite, Ingredient, Recipe,
@@ -25,6 +28,15 @@ from .permissions import IsAuthorOrAdminOrReadOnly
 
 class UsersViewSet(UserViewSet):
     pagination_class = CustomPagination
+
+    def retrieve(self, *args, **kwargs):
+        queryset = User.objects.all()
+        id_ = kwargs.get('id')
+        if self.action == 'me':
+            id_ = self.request.user.id
+        user = get_object_or_404(queryset, id=id_)
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data)
 
 
 class SubscribeView(APIView):
@@ -133,8 +145,8 @@ class ReceiptViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthorOrAdminOrReadOnly, ]
     pagination_class = CustomPagination
     queryset = Recipe.objects.all()
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('tags__name',)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.request.method == 'GET':

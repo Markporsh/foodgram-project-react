@@ -71,6 +71,19 @@ class ReceiptIngredientSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'amount', 'measurement_unit']
 
 
+class ReceiptTagSerializer(serializers.ModelSerializer):
+    """ Сериализатор модели, связывающей ингредиенты и рецепт. """
+
+    id = serializers.ReadOnlyField(source='tag.id')
+    name = serializers.ReadOnlyField(source='tag.name')
+    color = serializers.ReadOnlyField(source='tag.color')
+    slug = serializers.ReadOnlyField(source='tag.slug')
+
+    class Meta:
+        model = RecipeTag
+        fields = ('id', 'name', 'color', 'slug')
+
+
 class IngredientSerializer(serializers.ModelSerializer):
     """ Сериализатор просмотра модели Ингредиенты. """
 
@@ -82,7 +95,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 class ReceiptSerializer(serializers.ModelSerializer):
     """ Сериализатор просмотра модели Рецепт. """
 
-    tags = TagSerializer(many=True)
+    tags = serializers.SerializerMethodField()
     author = CustomUserSerializer(read_only=True)
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField(
@@ -108,6 +121,10 @@ class ReceiptSerializer(serializers.ModelSerializer):
             'cooking_time'
         ]
         validators = []
+
+    def get_tags(self, obj):
+        tags = RecipeTag.objects.filter(recipe=obj)
+        return ReceiptTagSerializer(tags, many=True).data
 
     def get_ingredients(self, obj):
         ingredients = RecipeIngredient.objects.filter(recipe=obj)
@@ -139,6 +156,16 @@ class AddIngredientReceiptSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = ['id', 'amount']
+
+
+# class AddTagReceiptSerializer(serializers.ModelSerializer):
+#     """ Сериализатор добавления тега в рецепт. """
+#
+#     id = serializers.IntegerField()
+#
+#     class Meta:
+#         model = RecipeIngredient
+#         fields = ['id']
 
 
 class CreateReceiptSerializer(serializers.ModelSerializer):
@@ -184,13 +211,14 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
         )
 
     def create_tags(self, tags, recipe):
-        print(tags, recipe)
+        print(tags, '\ntag\n', recipe, 'recipe')
         RecipeTag.objects.bulk_create(
             [RecipeTag(
                 recipe=recipe,
                 tag=tag,
             ) for tag in tags]
         )
+        print(Tag.objects.get(id=tags[0].id))
 
     def create(self, validated_data):
         """
