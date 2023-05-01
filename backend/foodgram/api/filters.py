@@ -1,13 +1,20 @@
 from distutils.util import strtobool
 
 import django_filters as filters
-from users.models import User
-from receipts.models import RecipeTag, Recipe, Favorite, ShoppingCart
+from receipts.models import Recipe, Favorite, ShoppingCart, Ingredient
 
 CHOICES_LIST = (
     ('0', 'False'),
     ('1', 'True')
 )
+
+
+class IngredientFilter(filters.FilterSet):
+    name = filters.CharFilter(lookup_expr='istartswith')
+
+    class Meta:
+        model = Ingredient
+        fields = ('name',)
 
 
 class CharFilterInFilter(filters.BaseInFilter, filters.CharFilter):

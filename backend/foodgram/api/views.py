@@ -9,9 +9,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from djoser.views import UserViewSet
-from rest_framework import filters
 
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientFilter
 from .pagination import CustomPagination
 from .serializers import (
     CreateReceiptSerializer, ReceiptSerializer, ShoppingCartSerializer,
@@ -136,7 +135,8 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
     serializer_class = IngredientSerializer
     queryset = Ingredient.objects.all()
-    search_fields = ['^name', ]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
 
 
 class ReceiptViewSet(viewsets.ModelViewSet):
