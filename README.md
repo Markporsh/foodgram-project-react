@@ -67,6 +67,7 @@ sudo docker-compose up -d
 To create are superuser
 
 sudo docker exec -it backend python manage.py createsuperuser
+
 And if you want, you can use the list of ingredients offered by us to write recipes. Upload it to the database with the following command:
 
-sudo docker exec -it foodgram-app python manage.py loaddata data/dump.json
+sudo docker exec -it backend python manage.py loaddata data/dump.json
