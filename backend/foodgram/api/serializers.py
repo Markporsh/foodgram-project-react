@@ -9,6 +9,13 @@ from receipts.models import (
 )
 from users.models import Subscription, User
 
+VALUES = {
+    'min_cocking_value': 3,
+    'max_cocking_value': 300,
+    'min_amount_value': 1,
+    'max_amount_value': 800
+}
+
 
 class CustomUserCreateSerializer(UserCreateSerializer):
     """ Сериализатор создания пользователя. """
@@ -41,12 +48,7 @@ class CustomUserSerializer(UserSerializer):
         ]
 
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return Subscription.objects.filter(
-            user=request.user, author=obj
-        ).exists()
+        return obj.author.exists()
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -104,7 +106,10 @@ class ReceiptSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField(
         method_name='get_is_in_shopping_cart'
     )
-    cooking_time = serializers.IntegerField(min_value=3, max_value=300)
+    cooking_time = serializers.IntegerField(
+        min_value=VALUES['min_cocking_value'],
+        max_value=VALUES['max_cocking_value']
+    )
 
     class Meta:
         model = Recipe
@@ -134,38 +139,27 @@ class ReceiptSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
-        return Favorite.objects.filter(
-            user=request.user, recipe_id=obj
-        ).exists()
+        return obj.favorites.filter(user=request.user).exists()
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
-        return ShoppingCart.objects.filter(
-            user=request.user, recipe_id=obj
-        ).exists()
+        return obj.shopping_cart.filter(user=request.user).exists()
 
 
 class AddIngredientReceiptSerializer(serializers.ModelSerializer):
     """ Сериализатор добавления ингредиента в рецепт. """
 
     id = serializers.IntegerField()
-    amount = serializers.IntegerField(min_value=1, max_value=100)
+    amount = serializers.IntegerField(
+        min_value=VALUES['min_amount_value'],
+        max_value=VALUES['max_amount_value']
+    )
 
     class Meta:
         model = RecipeIngredient
         fields = ['id', 'amount']
-
-
-# class AddTagReceiptSerializer(serializers.ModelSerializer):
-#     """ Сериализатор добавления тега в рецепт. """
-#
-#     id = serializers.IntegerField()
-#
-#     class Meta:
-#         model = RecipeIngredient
-#         fields = ['id']
 
 
 class CreateReceiptSerializer(serializers.ModelSerializer):
@@ -211,21 +205,18 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
         )
 
     def create_tags(self, tags, recipe):
-        print(tags, '\ntag\n', recipe, 'recipe')
         RecipeTag.objects.bulk_create(
             [RecipeTag(
                 recipe=recipe,
                 tag=tag,
             ) for tag in tags]
         )
-        print(Tag.objects.get(id=tags[0].id))
 
     def create(self, validated_data):
         """
         Создание рецепта.
         Доступно только авторизированному пользователю.
         """
-        print(validated_data)
 
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
@@ -240,8 +231,6 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
         Изменение рецепта.
         Доступно только автору.
         """
-        print(validated_data, 'val')
-        print(instance, 'instance')
 
         RecipeTag.objects.filter(recipe=instance).delete()
         RecipeIngredient.objects.filter(recipe=instance).delete()
@@ -259,7 +248,6 @@ class CreateReceiptSerializer(serializers.ModelSerializer):
         return instance
 
     def to_representation(self, instance):
-        print(instance)
         return ReceiptSerializer(instance, context={
             'request': self.context.get('request')
         }).data
@@ -323,8 +311,7 @@ class ShowSubscriptionsSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
-        return Subscription.objects.filter(
-            user=request.user, author=obj).exists()
+        return obj.author.exists()
 
     def get_recipes(self, obj):
         request = self.context.get('request')

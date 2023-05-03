@@ -1,7 +1,7 @@
 from distutils.util import strtobool
 
 import django_filters as filters
-from receipts.models import Recipe, Favorite, ShoppingCart, Ingredient
+from receipts.models import Recipe, Favorite, ShoppingCart, Ingredient, Tag
 
 CHOICES_LIST = (
     ('0', 'False'),
@@ -34,9 +34,10 @@ class RecipeFilter(filters.FilterSet):
         choices=CHOICES_LIST,
         method='is_in_shopping_cart_method'
     )
-    tags = CharFilterInFilter(
+    tags = filters.ModelMultipleChoiceFilter(
         field_name='recipetag__tag__slug',
-        lookup_expr='in',
+        to_field_name='slug',
+        queryset=Tag.objects.all(),
     )
 
     def is_favorited_method(self, queryset, name, value):
