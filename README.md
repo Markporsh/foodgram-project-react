@@ -12,10 +12,6 @@ Postgres
 
 http://51.250.82.73/
 
-email of superuser - superuser@mail.ru	
-
-password - superuser123
-
 Here you can share recipes of dishes, add them to favorites and display a shopping list for cooking your favorite dishes. To preserve order - only administrators are allowed to create tags and ingredients.
 
 
